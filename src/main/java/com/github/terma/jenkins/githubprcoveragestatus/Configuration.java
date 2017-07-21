@@ -17,19 +17,19 @@ limitations under the License.
 */
 package com.github.terma.jenkins.githubprcoveragestatus;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import net.sf.json.JSONObject;
+import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("WeakerAccess")
 public class Configuration extends AbstractDescribableImpl<Configuration> {
@@ -61,6 +61,18 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
         return DESCRIPTOR.getSonarUrl();
     }
 
+    public static String getSonarToken() {
+        return DESCRIPTOR.getSonarToken();
+    }
+
+    public static String getSonarLogin() {
+        return DESCRIPTOR.getSonarLogin();
+    }
+
+    public static String getSonarPassword() {
+        return DESCRIPTOR.getSonarPassword();
+    }
+
     public static Boolean isUseSonarForMasterCoverage() {
         return DESCRIPTOR.isUseSonarForMasterCoverage();
     }
@@ -75,8 +87,7 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
     }
 
     @SuppressWarnings("unused")
-    public static final class ConfigurationDescriptor extends Descriptor<Configuration>
-            implements MasterCoverageRepository, SettingsRepository {
+    public static final class ConfigurationDescriptor extends Descriptor<Configuration> implements SettingsRepository {
 
         private static final int DEFAULT_YELLOW_THRESHOLD = 80;
         private static final int DEFAULT_GREEN_THRESHOLD = 90;
@@ -89,6 +100,9 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
         private boolean privateJenkinsPublicGitHub;
         private boolean useSonarForMasterCoverage;
         private String sonarUrl;
+        private String sonarToken;
+        private String sonarLogin;
+        private String sonarPassword;
 
         private int yellowThreshold = DEFAULT_YELLOW_THRESHOLD;
         private int greenThreshold = DEFAULT_GREEN_THRESHOLD;
@@ -102,19 +116,14 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
             return "Coverage status for GitHub Pull Requests";
         }
 
-        @Override
-        public float get(String repo) {
-            final Float coverage = repo == null ? null : coverageByRepo.get(repo);
-            return coverage == null ? 0 : coverage;
+        @Nonnull
+        public Map<String, Float> getCoverageByRepo() {
+            return coverageByRepo;
         }
 
         public void set(String repo, float coverage) {
             coverageByRepo.put(repo, coverage);
             save();
-        }
-
-        public Map<String, Float> getCoverageByRepo() {
-            return coverageByRepo;
         }
 
         @Override
@@ -153,8 +162,21 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
         }
 
         @Override
+        public String getSonarToken() {
+            return sonarToken;
+        }
+
+        @Override
         public String getJenkinsUrl() {
             return jenkinsUrl;
+        }
+
+        public String getSonarLogin() {
+            return sonarLogin;
+        }
+
+        public String getSonarPassword() {
+            return sonarPassword;
         }
 
         @Override
@@ -167,6 +189,9 @@ public class Configuration extends AbstractDescribableImpl<Configuration> {
             privateJenkinsPublicGitHub = BooleanUtils.toBoolean(formData.getString("privateJenkinsPublicGitHub"));
             useSonarForMasterCoverage = BooleanUtils.toBoolean(formData.getString("useSonarForMasterCoverage"));
             sonarUrl = StringUtils.trimToNull(formData.getString("sonarUrl"));
+            sonarToken = StringUtils.trimToNull(formData.getString("sonarToken"));
+            sonarLogin = StringUtils.trimToNull(formData.getString("sonarLogin"));
+            sonarPassword = StringUtils.trimToNull(formData.getString("sonarPassword"));
             save();
             return super.configure(req, formData);
         }

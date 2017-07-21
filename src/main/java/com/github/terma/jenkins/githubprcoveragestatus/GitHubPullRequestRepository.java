@@ -1,3 +1,20 @@
+/*
+
+    Copyright 2015-2016 Artem Stasiuk
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
 package com.github.terma.jenkins.githubprcoveragestatus;
 
 import org.kohsuke.github.GHRepository;
@@ -8,7 +25,8 @@ import java.io.IOException;
 
 public class GitHubPullRequestRepository implements PullRequestRepository {
 
-    private static GHRepository getGitHubRepository(final String gitHubUrl) throws IOException {
+    @Override
+    public GHRepository getGitHubRepository(final String gitHubUrl) throws IOException {
         GitHub gitHub = getGitHub();
 
         try {
@@ -21,7 +39,7 @@ public class GitHubPullRequestRepository implements PullRequestRepository {
             throw new IOException("Error while accessing rate limit API", ex);
         }
 
-        final String userRepo = Utils.getUserRepo(gitHubUrl);
+        final String userRepo = GitUtils.getUserRepo(gitHubUrl);
 
         try {
             return gitHub.getRepository(userRepo);
@@ -52,8 +70,8 @@ public class GitHubPullRequestRepository implements PullRequestRepository {
     }
 
     @Override
-    public void comment(String gitUrl, int prId, String message) throws IOException {
-        getGitHubRepository(gitUrl).getPullRequest(prId).comment(message);
+    public void comment(final GHRepository ghRepository, final int prId, final String message) throws IOException {
+        ghRepository.getPullRequest(prId).comment(message);
     }
 
 }
